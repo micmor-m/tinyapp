@@ -12,7 +12,7 @@ app.set("view engine", "ejs");
 
 //generating a "unique" shortURL, by returning a string of 6 random alphanumeric characters:
 function generateRandomString() {
-return newTodo.id = Math.random().toString(36).substring(2,8);
+return Math.random().toString(36).substring(2,8);
 }
 
 const urlDatabase = {
@@ -46,6 +46,7 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  console.log(generateRandomString());
 });
 
 //add another page to display a single URL and its shortened form
