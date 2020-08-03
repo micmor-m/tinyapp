@@ -24,6 +24,15 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+//add another page to display a single URL and its shortened form
+app.get("/urls/:shortURL", (req, res) => {
+  //ejs template have to be always object
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  //"urls_show" is the name of the page to send to the client
+  //the page has to be in the views directory always
+  res.render("urls_show", templateVars);
+});
+
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
