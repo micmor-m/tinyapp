@@ -44,7 +44,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-//to handle the POST request from the client
+//to handle the POST request from the client to create a new shortURL for a provided longURL
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   //res.send("Ok");         // Respond with 'Ok' (we will replace this)
@@ -52,10 +52,25 @@ app.post("/urls", (req, res) => {
   urlDatabase[newShortURL] = req.body.longURL;
   console.log(urlDatabase);
   
-  // redirection to GET /todos
+  // redirection to specific page for the new created short link
   res.redirect('/urls/' + newShortURL);
-  
 });
+
+//to handle the POST request from the client to remove a shortURL and its long URL from the database
+app.post("/urls/:shortURL/delete", (req, res) => {
+  //console.log(req);  // Log the POST request body to the console
+  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  // deleteAction="/urls/" + req.params.shortURL + "/delete"
+  // let templateVars = { action: deleteAction };
+  // console.log(templateVars);
+  delete urlDatabase[req.params.shortURL];
+  //urlDatabase[newShortURL] = req.body.longURL;
+  console.log(urlDatabase);
+  
+  // redirection to the urls_index page ("/urls")
+  res.redirect('/urls/');
+});
+
 
 //generate a link that will redirect to the appropriate longURL
 app.get("/u/:shortURL", (req, res) => {
