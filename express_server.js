@@ -2,6 +2,9 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+//to use cookie
+var cookieParser = require('cookie-parser')
+
 //to use POST method and make the data returned readable it need to install
 //a middleware call body-parser
 const bodyParser = require("body-parser");
@@ -75,6 +78,17 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   console.log(urlDatabase);
   
+  // redirection to the urls_index page ("/urls")
+  res.redirect('/urls/');
+});
+
+//to handle the POST request from the client to login an user
+app.post("/login", (req, res) => {
+  console.log("Submit login");
+  console.log(req.body.username);
+  //delete urlDatabase[req.params.shortURL];
+  //console.log(urlDatabase);
+  res.cookie('name',req.body.username)
   // redirection to the urls_index page ("/urls")
   res.redirect('/urls/');
 });
