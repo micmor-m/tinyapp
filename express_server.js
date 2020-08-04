@@ -54,21 +54,36 @@ app.post("/urls", (req, res) => {
   
   // redirection to specific page for the new created short link
   res.redirect('/urls/' + newShortURL);
+  });
+
+  //to handle the POST request from the client to edit an existing long URL in the database
+app.post("/urls/:shortURL/submit", (req, res) => {
+  console.log("Submit updated longURL");
+  console.log(req.body.longURL);
+  //const newShortURL = generateRandomString();
+  urlDatabase[req.params.shortURL] = req.body.longURL;
+  //console.log(urlDatabase);
+  
+  // redirection to specific page for the new created short link
+  res.redirect('/urls/');
 });
 
 //to handle the POST request from the client to remove a shortURL and its long URL from the database
 app.post("/urls/:shortURL/delete", (req, res) => {
   //console.log(req);  // Log the POST request body to the console
-  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
-  // deleteAction="/urls/" + req.params.shortURL + "/delete"
-  // let templateVars = { action: deleteAction };
-  // console.log(templateVars);
+  //res.send("Ok");    // Respond with 'Ok' (we will replace this)
   delete urlDatabase[req.params.shortURL];
-  //urlDatabase[newShortURL] = req.body.longURL;
   console.log(urlDatabase);
   
   // redirection to the urls_index page ("/urls")
   res.redirect('/urls/');
+});
+
+//to handle the POST request from the client to go to the edit page to editing an existing long URL in the database
+app.post("/urls/:shortURL/edit", (req, res) => {
+   console.log("Pressed edit in URL list page")
+  // redirection to the urls_index page ("/urls")
+  res.redirect('/urls/' + req.params.shortURL);
 });
 
 
