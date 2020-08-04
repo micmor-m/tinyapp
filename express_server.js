@@ -117,3 +117,6 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+//to run this application type: npm start
+//an alias for start has been created in package.json script
