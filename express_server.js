@@ -46,9 +46,9 @@ const emailLookup = (submittedEmail, submittedPassword) => {
   }
   if (submittedEmail !== "") {
     for (let user in users) {
-      console.log(user);
+      console.log("Email look up user", user);
       //console.log("User", user)
-      console.log(users[user].email);
+      console.log("Email look up user email:", users[user].email);
      // if (user)
       if (users[user].email === submittedEmail) {
         console.log("this email already exist")
@@ -59,6 +59,65 @@ const emailLookup = (submittedEmail, submittedPassword) => {
   }  
   return true;
 }
+
+const logInLookup = (submittedEmail, submittedPassword) => {
+  if (submittedEmail) {
+    for (let user in users) {
+      console.log("User", user)
+      console.log("User email", users[user].email)
+      if (users[user].email === submittedEmail) {
+        console.log("yes there is this email")
+        if(users[user].password === submittedPassword) {
+     
+          //tmpObj = users[user]
+          //console.log(tmpObj)
+          username = users[user].id
+          //email = users[user].email
+          return username
+      //   } else {
+      //     console.log("User in database but password not match")
+      //     //res.status(403).send({ error : "Cannot find this identification" });
+      //     return false
+      //   }
+      // } else {
+        }
+      }
+    }
+  }
+  console.log("Cannot find this user in database")
+  //res.status(403).send({ error : "Cannot find this identification" });
+  return false;
+
+};
+
+const templateLookup = (submittedCookie) => {
+let tmpObj;
+  console.log("Req cookies user_id:", submittedCookie)
+  if (submittedCookie) {
+    for (let user in users) {
+      console.log("Template look up User of users", user)
+      if (user === submittedCookie) {
+        console.log("templateLookUp: yes there is this user")
+        tmpObj = users[user]
+        console.log(tmpObj)
+        return tmpObj;
+        //username = users[user].id
+        //email = users[user].email
+      // } else {
+      //   console.log("templateLookUp: User id does not exist")
+      //   // username = "";
+      //   // email = "";
+      //   return false
+      }
+    }
+  } else {
+    console.log("templateLookUp: User id empty")
+    // username = "";
+    // email = "";
+    return false
+  }
+};
+
 
 //Managing routes with express
 app.get("/", (req, res) => {
@@ -72,10 +131,55 @@ app.get("/urls.json", (req, res) => {
 //to handle the POST request from the client to login an user
 app.post("/login", (req, res) => {
   console.log("Submit login");
-  console.log(req.body.username);
+  console.log(req.body.email);
+  console.log(req.body.password);
+
+  
+  
+  if (logInLookup(req.body.email, req.body.password)) {
+    username = logInLookup(req.body.email, req.body.password)
+  } else {
+    res.status(403).send({ error : "Cannot find this identification" });
+    return
+  }   
+
+  // if (req.body.email) {
+  //   for (let user in users) {
+  //     console.log("User", user)
+  //     console.log("User email", users[user].email)
+  //     if (users[user].email === req.body.email) {
+  //       console.log("yes there is this email")
+  //       if(users[user].password === req.body.password) {
+       
+  //         //tmpObj = users[user]
+  //         //console.log(tmpObj)
+  //         username = users[user].id
+  //         //email = users[user].email
+  //         return username
+  //       } else {
+  //         console.log("User in database but password not match")
+  //         res.status(403).send({ error : "Cannot find this identification" });
+  //         return
+  //       }
+  //     } else {
+  //       console.log("Cannot find this user in database")
+  //       res.status(403).send({ error : "Cannot find this identification" });
+  //       return;
+  //     }
+  //   }
+  // }
+     // } else {
+     //   console.log("User id empty")
+     //   username = "";
+    //   email = "";
+    // }
+
+  //console.log(tmpObj.id)
+  //let templateVars = {username: username, email: email, urls: urlDatabase };
+
   //delete urlDatabase[req.params.shortURL];
   //console.log(urlDatabase);
-  res.cookie('username',req.body.username)
+  res.cookie('user_id',username)
   // redirection to the urls_index page ("/urls")
   res.redirect('/urls/');
 });
@@ -87,7 +191,7 @@ app.post("/logout", (req, res) => {
   //delete urlDatabase[req.params.shortURL];
   //console.log(urlDatabase);
   //res.cookie('username',req.body.username)
-  res.clearCookie('username')
+  res.clearCookie('user_id')
   // redirection to the urls_index page ("/urls")
   res.redirect('/urls/');
 });
@@ -133,7 +237,7 @@ app.post("/register", (req, res) => {
   //console.log(users);
   users[newUser].email = req.body.email;
   users[newUser].password = req.body.password;
-  console.log(users);
+  console.log("Post /register users", users);
   res.cookie('user_id', users[newUser].id)
   // redirection to the urls_index page ("/urls")
   res.redirect('/urls/');
@@ -141,30 +245,19 @@ app.post("/register", (req, res) => {
 
 app.get("/urls", (req, res) => {
   //ejs template have to be always object
- 
-  let tmpObj;
+  console.log("Req cookies user_id:", req.cookies["user_id"])
   
-  if (req.cookies["user_id"]) {
-    for (let user in users) {
-      //console.log("User", user)
-      if (user === req.cookies["user_id"]) {
-        console.log("yes there is this user")
-        tmpObj = users[user]
-        console.log(tmpObj)
-        username = users[user].id
-        email = users[user].email
-      } else {
-        console.log("User id does not exist")
-        username = "";
-        email = "";
-      }
-    }
+  let tmpObj = templateLookup(req.cookies["user_id"])
+  console.log("get /urls tmpObj", tmpObj);
+  if (tmpObj) {
+    console.log("GET /urls: TRUE there is this user")
+    username = tmpObj.id
+    email = tmpObj.email
   } else {
-    console.log("User id empty")
+    console.log("GET /urls: User id does not exist or empty")
     username = "";
     email = "";
   }
-
   //console.log(tmpObj.id)
   let templateVars = {username: username, email: email, urls: urlDatabase };
   
@@ -173,25 +266,35 @@ app.get("/urls", (req, res) => {
 
 //add another route handler will render the page with the form urls_new.ejs
 app.get("/urls/new", (req, res) => {
-  let tmpObj;
+  // let tmpObj;
   
-  if (req.cookies["user_id"]) {
-    for (let user in users) {
-      //console.log("User", user)
-      if (user === req.cookies["user_id"]) {
-        console.log("yes there is this user")
-        tmpObj = users[user]
-        console.log(tmpObj)
-        username = users[user].id
-        email = users[user].email
-      } else {
-        console.log("User id does not exist")
-        username = "";
-        email = "";
-      }
-    }
+  // if (req.cookies["user_id"]) {
+  //   for (let user in users) {
+  //     //console.log("User", user)
+  //     if (user === req.cookies["user_id"]) {
+  //       console.log("yes there is this user")
+  //       tmpObj = users[user]
+  //       console.log(tmpObj)
+  //       username = users[user].id
+  //       email = users[user].email
+  //     } else {
+  //       console.log("User id does not exist")
+  //       username = "";
+  //       email = "";
+  //     }
+  //   }
+  // } else {
+  //   console.log("User id empty")
+  //   username = "";
+  //   email = "";
+  // }
+  let tmpObj = templateLookup(req.cookies["user_id"])
+  if (tmpObj) {
+    console.log("GET /urls: TRUE there is this user")
+    username = tmpObj.id
+    email = tmpObj.email
   } else {
-    console.log("User id empty")
+    console.log("GET /urls: User id does not exist or empty")
     username = "";
     email = "";
   }
@@ -209,29 +312,16 @@ app.get("/urls/new", (req, res) => {
 
 //add another route handler will render the page with the form urls_register.ejs
 app.get("/register", (req, res) => {
-  let tmpObj;
-  
-  if (req.cookies["user_id"]) {
-    for (let user in users) {
-      //console.log("User", user)
-      if (user === req.cookies["user_id"]) {
-        console.log("yes there is this user")
-        tmpObj = users[user]
-        console.log(tmpObj)
-        username = users[user].id
-        email = users[user].email
-      } else {
-        console.log("User id does not exist")
-        username = "";
-        email = "";
-      }
-    }
+  let tmpObj = templateLookup(req.cookies["user_id"])
+  if (tmpObj) {
+    console.log("GET /urls: TRUE there is this user")
+    username = tmpObj.id
+    email = tmpObj.email
   } else {
-    console.log("User id empty")
+    console.log("GET /urls: User id does not exist or empty")
     username = "";
     email = "";
-  }
-  
+  }  
 
   //console.log(tmpObj.id)
   let templateVars = {username: username, email: email};
@@ -244,28 +334,39 @@ app.get("/register", (req, res) => {
 
 //add another route handler will render the page with the form urls_login.ejs
 app.get("/login", (req, res) => {
-  let tmpObj;
+  // let tmpObj;
   
-  if (req.cookies["user_id"]) {
-    for (let user in users) {
-      //console.log("User", user)
-      if (user === req.cookies["user_id"]) {
-        console.log("yes there is this user")
-        tmpObj = users[user]
-        console.log(tmpObj)
-        username = users[user].id
-        email = users[user].email
-      } else {
-        console.log("User id does not exist")
-        username = "";
-        email = "";
-      }
-    }
+  // if (req.cookies["user_id"]) {
+  //   for (let user in users) {
+  //     //console.log("User", user)
+  //     if (user === req.cookies["user_id"]) {
+  //       console.log("yes there is this user")
+  //       tmpObj = users[user]
+  //       console.log(tmpObj)
+  //       username = users[user].id
+  //       email = users[user].email
+  //     } else {
+  //       console.log("User id does not exist")
+  //       username = "";
+  //       email = "";
+  //     }
+  //   }
+  // } else {
+  //   console.log("User id empty")
+  //   username = "";
+  //   email = "";
+  // }
+
+  let tmpObj = templateLookup(req.cookies["user_id"])
+  if (tmpObj) {
+    console.log("GET /urls: TRUE there is this user")
+    username = tmpObj.id
+    email = tmpObj.email
   } else {
-    console.log("User id empty")
+    console.log("GET /urls: User id does not exist or empty")
     username = "";
     email = "";
-  }
+  }  
   
   //console.log(tmpObj.id)
   let templateVars = {username: username, email: email};
@@ -332,29 +433,38 @@ app.get("/u/:shortURL", (req, res) => {
 
 //add another page to display a single URL and its shortened form
 app.get("/urls/:shortURL", (req, res) => {
-  let tmpObj;
+  // let tmpObj;
   
-  if (req.cookies["user_id"]) {
-    for (let user in users) {
-      //console.log("User", user)
-      if (user === req.cookies["user_id"]) {
-        console.log("yes there is this user")
-        tmpObj = users[user]
-        console.log(tmpObj)
-        username = users[user].id
-        email = users[user].email
-      } else {
-        console.log("User id does not exist")
-        username = "";
-        email = "";
-      }
-    }
+  // if (req.cookies["user_id"]) {
+  //   for (let user in users) {
+  //     //console.log("User", user)
+  //     if (user === req.cookies["user_id"]) {
+  //       console.log("yes there is this user")
+  //       tmpObj = users[user]
+  //       console.log(tmpObj)
+  //       username = users[user].id
+  //       email = users[user].email
+  //     } else {
+  //       console.log("User id does not exist")
+  //       username = "";
+  //       email = "";
+  //     }
+  //   }
+  // } else {
+  //   console.log("User id empty")
+  //   username = "";
+  //   email = "";
+  // }
+  let tmpObj = templateLookup(req.cookies["user_id"])
+  if (tmpObj) {
+    console.log("GET /urls: TRUE there is this user")
+    username = tmpObj.id
+    email = tmpObj.email
   } else {
-    console.log("User id empty")
+    console.log("GET /urls: User id does not exist or empty")
     username = "";
     email = "";
-  }
-
+  }  
   //console.log(tmpObj.id)
   let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   //ejs template have to be always object
