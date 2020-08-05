@@ -10,6 +10,7 @@ var cookieParser = require('cookie-parser')
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
+app.use(cookieParser())
 //tells the Express app to use EJS as its templating engine
 app.set("view engine", "ejs");
 
@@ -33,18 +34,44 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+//to handle the POST request from the client to login an user
+app.post("/login", (req, res) => {
+  console.log("Submit login");
+  console.log(req.body.username);
+  //delete urlDatabase[req.params.shortURL];
+  //console.log(urlDatabase);
+  res.cookie('username',req.body.username)
+  // redirection to the urls_index page ("/urls")
+  res.redirect('/urls/');
+});
+
+//to handle the POST request from the client to logout an user
+app.post("/logout", (req, res) => {
+  console.log("Submit logout");
+  //console.log(req.body.username);
+  //delete urlDatabase[req.params.shortURL];
+  //console.log(urlDatabase);
+  //res.cookie('username',req.body.username)
+  res.clearCookie('username')
+  // redirection to the urls_index page ("/urls")
+  res.redirect('/urls/');
+});
+
 app.get("/urls", (req, res) => {
   //ejs template have to be always object
-  let templateVars = { urls: urlDatabase };
+  let templateVars = {username: req.cookies["username"], urls: urlDatabase };
+  console.log(req.cookies["username"])
+  //let templateVars = {urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
 //add another route handler will render the page with the form urls_new.ejs
 app.get("/urls/new", (req, res) => {
+  let templateVars = {username: req.cookies["username"]}
   //ejs template have to be always object
   //"urls_new" is the name of the page to send to the client
   //the page has to be in the views directory always
-  res.render("urls_new");
+  res.render("urls_new", templateVars);
 });
 
 //to handle the POST request from the client to create a new shortURL for a provided longURL
@@ -82,16 +109,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect('/urls/');
 });
 
-//to handle the POST request from the client to login an user
-app.post("/login", (req, res) => {
-  console.log("Submit login");
-  console.log(req.body.username);
-  //delete urlDatabase[req.params.shortURL];
-  //console.log(urlDatabase);
-  res.cookie('name',req.body.username)
-  // redirection to the urls_index page ("/urls")
-  res.redirect('/urls/');
-});
+
 
 //to handle the POST request from the client to go to the edit page to editing an existing long URL in the database
 app.post("/urls/:shortURL/edit", (req, res) => {
@@ -112,7 +130,7 @@ app.get("/u/:shortURL", (req, res) => {
 //add another page to display a single URL and its shortened form
 app.get("/urls/:shortURL", (req, res) => {
   //ejs template have to be always object
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  let templateVars = {  username: req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   //"urls_show" is the name of the page to send to the client
   //the page has to be in the views directory always
   
