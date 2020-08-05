@@ -231,6 +231,7 @@ app.get("/register", (req, res) => {
     username = "";
     email = "";
   }
+  
 
   //console.log(tmpObj.id)
   let templateVars = {username: username, email: email};
@@ -240,6 +241,41 @@ app.get("/register", (req, res) => {
   //the page has to be in the views directory always
   res.render("urls_register", templateVars);
 });
+
+//add another route handler will render the page with the form urls_login.ejs
+app.get("/login", (req, res) => {
+  let tmpObj;
+  
+  if (req.cookies["user_id"]) {
+    for (let user in users) {
+      //console.log("User", user)
+      if (user === req.cookies["user_id"]) {
+        console.log("yes there is this user")
+        tmpObj = users[user]
+        console.log(tmpObj)
+        username = users[user].id
+        email = users[user].email
+      } else {
+        console.log("User id does not exist")
+        username = "";
+        email = "";
+      }
+    }
+  } else {
+    console.log("User id empty")
+    username = "";
+    email = "";
+  }
+  
+  //console.log(tmpObj.id)
+  let templateVars = {username: username, email: email};
+  //let templateVars = {username: req.cookies["username"]}
+  //ejs template have to be always object
+  //"urls_new" is the name of the page to send to the client
+  //the page has to be in the views directory always
+  res.render("urls_login", templateVars);
+});
+
 
 //to handle the POST request from the client to create a new shortURL for a provided longURL
 app.post("/urls", (req, res) => {

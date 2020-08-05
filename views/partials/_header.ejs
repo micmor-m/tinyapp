@@ -17,10 +17,8 @@
         <% } %>
        
         <%if (!username) { %>
-          <form method="POST" action="/login">
-            <input type="text" name="user.id" placeholder="Username"> 
-            <button type="submit" class="btn btn-primary">Login</button>
-          </form>
+          <a class="nav-item nav-link" href="/register">Register</a>
+          <a class="nav-item nav-link" href="/login">Login</a>
           <% } %>
           
        
