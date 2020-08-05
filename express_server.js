@@ -20,10 +20,25 @@ function generateRandomString() {
 return Math.random().toString(36).substring(2,8);
 }
 
+//urlDatabase
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+//users database
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
 
 //Managing routes with express
 app.get("/", (req, res) => {
@@ -57,21 +72,124 @@ app.post("/logout", (req, res) => {
   res.redirect('/urls/');
 });
 
+//to handle the POST request from the client to register an user
+app.post("/register", (req, res) => {
+  console.log("Submit register user");
+  //console.log(req.body.username);
+  const newUser = generateRandomString();
+  console.log(newUser);
+  users[newUser] = {};
+  
+  users[newUser].id = newUser;
+  //console.log(users);
+  users[newUser].email = req.body.email;
+  users[newUser].password = req.body.password;
+  console.log(users);
+  res.cookie('user_id', users[newUser].id)
+  // redirection to the urls_index page ("/urls")
+  res.redirect('/urls/');
+});
+
 app.get("/urls", (req, res) => {
   //ejs template have to be always object
-  let templateVars = {username: req.cookies["username"], urls: urlDatabase };
-  console.log(req.cookies["username"])
-  //let templateVars = {urls: urlDatabase };
+ 
+  let tmpObj;
+  
+  if (req.cookies["user_id"]) {
+    for (let user in users) {
+      //console.log("User", user)
+      if (user === req.cookies["user_id"]) {
+        console.log("yes there is this user")
+        tmpObj = users[user]
+        console.log(tmpObj)
+        username = users[user].id
+        email = users[user].email
+      } else {
+        console.log("User id does not exist")
+        username = "";
+        email = "";
+      }
+    }
+  } else {
+    console.log("User id empty")
+    username = "";
+    email = "";
+  }
+
+  //console.log(tmpObj.id)
+  let templateVars = {username: username, email: email, urls: urlDatabase };
+  
   res.render("urls_index", templateVars);
 });
 
 //add another route handler will render the page with the form urls_new.ejs
 app.get("/urls/new", (req, res) => {
-  let templateVars = {username: req.cookies["username"]}
+  let tmpObj;
+  
+  if (req.cookies["user_id"]) {
+    for (let user in users) {
+      //console.log("User", user)
+      if (user === req.cookies["user_id"]) {
+        console.log("yes there is this user")
+        tmpObj = users[user]
+        console.log(tmpObj)
+        username = users[user].id
+        email = users[user].email
+      } else {
+        console.log("User id does not exist")
+        username = "";
+        email = "";
+      }
+    }
+  } else {
+    console.log("User id empty")
+    username = "";
+    email = "";
+  }
+
+  //console.log(tmpObj.id)
+  let templateVars = {username: username, email: email};
+  
+  //let templateVars = {user: tmpObj}
+  //let templateVars = {username: req.cookies["username"]}
   //ejs template have to be always object
   //"urls_new" is the name of the page to send to the client
   //the page has to be in the views directory always
   res.render("urls_new", templateVars);
+});
+
+//add another route handler will render the page with the form urls_register.ejs
+app.get("/register", (req, res) => {
+  let tmpObj;
+  
+  if (req.cookies["user_id"]) {
+    for (let user in users) {
+      //console.log("User", user)
+      if (user === req.cookies["user_id"]) {
+        console.log("yes there is this user")
+        tmpObj = users[user]
+        console.log(tmpObj)
+        username = users[user].id
+        email = users[user].email
+      } else {
+        console.log("User id does not exist")
+        username = "";
+        email = "";
+      }
+    }
+  } else {
+    console.log("User id empty")
+    username = "";
+    email = "";
+  }
+
+  //console.log(tmpObj.id)
+  let templateVars = {username: username, email: email};
+  //let templateVars = {username: req.cookies["username"]}
+  //ejs template have to be always object
+  //"urls_new" is the name of the page to send to the client
+  //the page has to be in the views directory always
+  res.render("urls_register", templateVars);
 });
 
 //to handle the POST request from the client to create a new shortURL for a provided longURL
@@ -129,8 +247,33 @@ app.get("/u/:shortURL", (req, res) => {
 
 //add another page to display a single URL and its shortened form
 app.get("/urls/:shortURL", (req, res) => {
+  let tmpObj;
+  
+  if (req.cookies["user_id"]) {
+    for (let user in users) {
+      //console.log("User", user)
+      if (user === req.cookies["user_id"]) {
+        console.log("yes there is this user")
+        tmpObj = users[user]
+        console.log(tmpObj)
+        username = users[user].id
+        email = users[user].email
+      } else {
+        console.log("User id does not exist")
+        username = "";
+        email = "";
+      }
+    }
+  } else {
+    console.log("User id empty")
+    username = "";
+    email = "";
+  }
+
+  //console.log(tmpObj.id)
+  let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   //ejs template have to be always object
-  let templateVars = {  username: req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  //////////let templateVars = {  username: req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   //"urls_show" is the name of the page to send to the client
   //the page has to be in the views directory always
   
