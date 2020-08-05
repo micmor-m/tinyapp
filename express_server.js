@@ -40,6 +40,26 @@ const users = {
   }
 }
 
+const emailLookup = (submittedEmail, submittedPassword) => {
+  if ((submittedEmail === "") || (submittedPassword  === "")) {
+    return false;
+  }
+  if (submittedEmail !== "") {
+    for (let user in users) {
+      console.log(user);
+      //console.log("User", user)
+      console.log(users[user].email);
+     // if (user)
+      if (users[user].email === submittedEmail) {
+        console.log("this email already exist")
+        //res.status(400).send({ error : "Email already exist" });
+        return false;
+      }
+    }
+  }  
+  return true;
+}
+
 //Managing routes with express
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -76,6 +96,35 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   console.log("Submit register user");
   //console.log(req.body.username);
+
+   
+  if (!emailLookup(req.body.email, req.body.password)) {
+    res.status(400).send({ error : "Empty field or Email already exist" });
+    return
+  }
+  
+  // if ((req.body.email === "") || (req.body.password  === "")) {
+  //   let templateVars = { errMessage: "400 Page not found. The short URL typed in is not present in the database."};
+  //   //res.render("urls_notFound", templateVars);  
+  //   res.status(400).send({ error : "Empty field" });
+  //   return
+  // }
+  
+  // if (req.body.email  !== "") {
+  //   console.log(req.body.email)
+  //   for (let user in users) {
+  //     console.log(user);
+  //     //console.log("User", user)
+  //     console.log(users[user].email);
+  //    // if (user)
+  //     if (users[user].email === req.body.email) {
+  //       console.log("this email already exist")
+  //       res.status(400).send({ error : "Email already exist" });
+  //       return
+  //     }
+  //   }
+  // }  
+  
   const newUser = generateRandomString();
   console.log(newUser);
   users[newUser] = {};
