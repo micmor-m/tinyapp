@@ -17,30 +17,18 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.use(cookieParser())
+
 //tells the Express app to use EJS as its templating engine
 app.set("view engine", "ejs");
 
-
-
-
-//generating a "unique" shortURL, by returning a string of 6 random alphanumeric characters
+//generate a "unique" shortURL, by returning a string of 6 random alphanumeric characters
 //used to generate random shortURL
 function generateRandomString() {
 return Math.random().toString(36).substring(2,8);
 }
 
-//urlDatabase
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
-
-
 const bcrypt = require('bcrypt');
-//const saltRounds = 10;
-// const password = "purple-monkey-dinosaur"; // found in the req.params object
-//const hashedPassword = bcrypt.hashSync("car", 10);
-//console.log("Hashed PW: ", hashedPassword);
+
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -89,6 +77,25 @@ const emailLookup = (submittedEmail, submittedPassword) => {
   return true;
 }
 
+//this replace logIN lookup
+const getUserByEmail = function(email, usersDtb) {
+  // lookup magic...
+  let userToReturn = {};
+
+  if (email) {
+    for (let user in usersDtb) {
+      console.log("getUserByEmail -User", user)
+      console.log("getUserByEmail - User email", usersDtb[user].email)
+      if (usersDtb[user].email === email) {
+        console.log("getUserByEmail - yes there is this email")
+        userToReturn = usersDtb[user];
+        return userToReturn;
+      }
+    }
+  }
+  return userToReturn;
+};
+
 const logInLookup = (submittedEmail, submittedPassword) => {
   if (submittedEmail) {
     for (let user in users) {
@@ -98,18 +105,11 @@ const logInLookup = (submittedEmail, submittedPassword) => {
         console.log("yes there is this email")
         if (bcrypt.compareSync(submittedPassword, users[user].password)) {
         //if(users[user].password === submittedPassword) {
-     
           //tmpObj = users[user]
           //console.log(tmpObj)
           username = users[user].id
           //email = users[user].email
           return username
-      //   } else {
-      //     console.log("User in database but password not match")
-      //     //res.status(403).send({ error : "Cannot find this identification" });
-      //     return false
-      //   }
-      // } else {
         }
       }
     }
@@ -133,11 +133,6 @@ let tmpObj;
         return tmpObj;
         //username = users[user].id
         //email = users[user].email
-      // } else {
-      //   console.log("templateLookUp: User id does not exist")
-      //   // username = "";
-      //   // email = "";
-      //   return false
       }
     }
   } else {
@@ -174,47 +169,30 @@ app.get("/urls.json", (req, res) => {
 app.post("/login", (req, res) => {
   console.log("Submit login");
   console.log(req.body.email);
-  console.log(req.body.password);
+  console.log("post login - Submit login", req.body.password);
+  
+  const returnedUser = getUserByEmail(req.body.email, users)
+  //if returned user is not an empty object
+  if ((returnedUser) && (bcrypt.compareSync(req.body.password, returnedUser.password))) {
+    console.log("post login - returnedUser ", returnedUser);
+    console.log("post login - returnedUser.password ", returnedUser.password);
 
-  
-  
-  if (logInLookup(req.body.email, req.body.password)) {
-    username = logInLookup(req.body.email, req.body.password)
+    username = returnedUser.id
+    console.log("post login username in password match",returnedUser.id)
+    
   } else {
     res.status(403).send({ error : "Cannot find this identification" });
     return
-  }   
+  }
 
-  // if (req.body.email) {
-  //   for (let user in users) {
-  //     console.log("User", user)
-  //     console.log("User email", users[user].email)
-  //     if (users[user].email === req.body.email) {
-  //       console.log("yes there is this email")
-  //       if(users[user].password === req.body.password) {
-       
-  //         //tmpObj = users[user]
-  //         //console.log(tmpObj)
-  //         username = users[user].id
-  //         //email = users[user].email
-  //         return username
-  //       } else {
-  //         console.log("User in database but password not match")
-  //         res.status(403).send({ error : "Cannot find this identification" });
-  //         return
-  //       }
-  //     } else {
-  //       console.log("Cannot find this user in database")
-  //       res.status(403).send({ error : "Cannot find this identification" });
-  //       return;
-  //     }
-  //   }
+
+
+  // if (logInLookup(req.body.email, req.body.password)) {
+  //   username = logInLookup(req.body.email, req.body.password)
+  // } else {
+  //   res.status(403).send({ error : "Cannot find this identification" });
+  //   return
   // }
-     // } else {
-     //   console.log("User id empty")
-     //   username = "";
-    //   email = "";
-    // }
 
   //console.log(tmpObj.id)
   //let templateVars = {username: username, email: email, urls: urlDatabase };
@@ -247,35 +225,24 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   console.log("Submit register user");
   //console.log(req.body.username);
-
    
-  if (!emailLookup(req.body.email, req.body.password)) {
+  if ((req.body.email === "") || (req.body.password  === "")) {
+    res.status(400).send({ error : "Empty field or Email already exist" });
+    return;
+  }
+
+  const returnedUser = getUserByEmail(req.body.email, users)
+  console.log("post register returned user", returnedUser)
+  if (returnedUser) {
     res.status(400).send({ error : "Empty field or Email already exist" });
     return
   }
   
-  // if ((req.body.email === "") || (req.body.password  === "")) {
-  //   let templateVars = { errMessage: "400 Page not found. The short URL typed in is not present in the database."};
-  //   //res.render("urls_notFound", templateVars);  
-  //   res.status(400).send({ error : "Empty field" });
+  // if (!getUserByEmail(req.body.email, req.body.password)) {
+  //   res.status(400).send({ error : "Empty field or Email already exist" });
   //   return
   // }
-  
-  // if (req.body.email  !== "") {
-  //   console.log(req.body.email)
-  //   for (let user in users) {
-  //     console.log(user);
-  //     //console.log("User", user)
-  //     console.log(users[user].email);
-  //    // if (user)
-  //     if (users[user].email === req.body.email) {
-  //       console.log("this email already exist")
-  //       res.status(400).send({ error : "Email already exist" });
-  //       return
-  //     }
-  //   }
-  // }  
-  
+
   const newUser = generateRandomString();
   console.log(newUser);
   users[newUser] = {};
@@ -300,7 +267,6 @@ app.get("/urls", (req, res) => {
   //console.log("Req cookies user_id:", req.cookies["user_id"])
   console.log("Req cookies user_id:", req.session['user_id'])
   
-
   //let tmpObj = templateLookup(req.cookies["user_id"])
   let tmpObj = templateLookup(req.session['user_id'])
   console.log("get /urls tmpObj", tmpObj);
@@ -313,22 +279,6 @@ app.get("/urls", (req, res) => {
     username = "";
     email = "";
   }
-  //console.log(tmpObj.id)
-  // console.log(urlDatabase);
-  // for(let url in urlDatabase) {
-  //    console.log(url);
-  //    console.log(urlDatabase[url]);
-  //    console.log(urlDatabase[url].longURL);
-  //}
-//   let filteredUrlDatabase = {};
-//   for(let url in urlDatabase) {
-//     //console.log(url);
-//     //console.log(urlDatabase[url]);
-//     //console.log(urlDatabase[url].userID);
-//     if ((urlDatabase[url].userID) === (username)) {
-//       filteredUrlDatabase[url] = urlDatabase[url];
-//     }
-//  }
 
  console.log("get /urls - filteredUrlDatabase", urlsForUser(username))
  let templateVars = {username: username, email: email, urls: urlsForUser(username) };
@@ -358,14 +308,6 @@ app.get("/urls/new", (req, res) => {
   }
 
   //console.log(tmpObj.id)
-  /////////let templateVars = {username: username, email: email};
-  
-  //let templateVars = {user: tmpObj}
-  //let templateVars = {username: req.cookies["username"]}
-  //ejs template have to be always object
-  //"urls_new" is the name of the page to send to the client
-  //the page has to be in the views directory always
-  //////////res.render("urls_new", templateVars);
 });
 
 //add another route handler will render the page with the form urls_register.ejs
@@ -393,28 +335,6 @@ app.get("/register", (req, res) => {
 
 //add another route handler will render the page with the form urls_login.ejs
 app.get("/login", (req, res) => {
-  // let tmpObj;
-  
-  // if (req.cookies["user_id"]) {
-  //   for (let user in users) {
-  //     //console.log("User", user)
-  //     if (user === req.cookies["user_id"]) {
-  //       console.log("yes there is this user")
-  //       tmpObj = users[user]
-  //       console.log(tmpObj)
-  //       username = users[user].id
-  //       email = users[user].email
-  //     } else {
-  //       console.log("User id does not exist")
-  //       username = "";
-  //       email = "";
-  //     }
-  //   }
-  // } else {
-  //   console.log("User id empty")
-  //   username = "";
-  //   email = "";
-  // }
 
   //let tmpObj = templateLookup(req.cookies["user_id"])
   let tmpObj = templateLookup(req.session['user_id'])
@@ -512,28 +432,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 //add another page to display a single URL and its shortened form
 app.get("/urls/:shortURL", (req, res) => {
-  // let tmpObj;
-  
-  // if (req.cookies["user_id"]) {
-  //   for (let user in users) {
-  //     //console.log("User", user)
-  //     if (user === req.cookies["user_id"]) {
-  //       console.log("yes there is this user")
-  //       tmpObj = users[user]
-  //       console.log(tmpObj)
-  //       username = users[user].id
-  //       email = users[user].email
-  //     } else {
-  //       console.log("User id does not exist")
-  //       username = "";
-  //       email = "";
-  //     }
-  //   }
-  // } else {
-  //   console.log("User id empty")
-  //   username = "";
-  //   email = "";
-  // }
+
   let tmpObj = templateLookup(req.session['user_id'])
   //let tmpObj = templateLookup(req.cookies["user_id"])
   if (tmpObj) {
@@ -584,13 +483,13 @@ app.get("/hello", (req, res) => {
 app.get("/set", (req, res) => {
   const a = 1;
   res.send(`a = ${a}`);
- });
+});
  
- app.get("/fetch", (req, res) => {
+app.get("/fetch", (req, res) => {
   res.send(`a = ${a}`);
- });
+});
 
- // this matches all routes and all methods not catched until this point
+// this matches all routes and all methods not catched until this point
 app.use((req, res) => {
   //console.log(err);
   res.status(404).send({
