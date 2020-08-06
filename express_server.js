@@ -14,6 +14,9 @@ app.use(cookieParser())
 //tells the Express app to use EJS as its templating engine
 app.set("view engine", "ejs");
 
+
+
+
 //generating a "unique" shortURL, by returning a string of 6 random alphanumeric characters
 //used to generate random shortURL
 function generateRandomString() {
@@ -25,6 +28,13 @@ return Math.random().toString(36).substring(2,8);
 //   "b2xVn2": "http://www.lighthouselabs.ca",
 //   "9sm5xK": "http://www.google.com"
 // };
+
+
+const bcrypt = require('bcrypt');
+//const saltRounds = 10;
+// const password = "purple-monkey-dinosaur"; // found in the req.params object
+//const hashedPassword = bcrypt.hashSync("car", 10);
+//console.log("Hashed PW: ", hashedPassword);
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -39,17 +49,17 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "$2b$10$wwEyMVLjYWop26EEFte5/OyAYi/sRgMox/W5A0kEOlSfnSZGnBJDW"
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: "$2b$10$oOkYh2aNY2srIpM9i7PSsuEO4CFrCNpXbhlaA6uONcyuWwrRZLkfC" //"dishwasher-funk"
   },
   "aJ48lW": {
     id: "aJ48lW", 
     email: "aJ48lW@example.com", 
-    password: "car"
+    password: "$2b$10$ZBi6eNjg..qC8pRhP8cK2e/xGPwIbgcgr0qLmbu7ofIcL5MmUBr1G"  //"car"
   }
 }
 
@@ -80,7 +90,8 @@ const logInLookup = (submittedEmail, submittedPassword) => {
       console.log("User email", users[user].email)
       if (users[user].email === submittedEmail) {
         console.log("yes there is this email")
-        if(users[user].password === submittedPassword) {
+        if (bcrypt.compareSync(submittedPassword, users[user].password)) {
+        //if(users[user].password === submittedPassword) {
      
           //tmpObj = users[user]
           //console.log(tmpObj)
@@ -261,7 +272,10 @@ app.post("/register", (req, res) => {
   users[newUser].id = newUser;
   //console.log(users);
   users[newUser].email = req.body.email;
-  users[newUser].password = req.body.password;
+
+  //hash password from user when registering
+  users[newUser].password = bcrypt.hashSync(req.body.password, 10);
+  console.log("Post /register user - hashed PW", bcrypt.hashSync(req.body.password, 10))
   console.log("Post /register users", users);
   res.cookie('user_id', users[newUser].id)
   // redirection to the urls_index page ("/urls")
