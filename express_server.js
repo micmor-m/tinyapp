@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieSession = require('cookie-session');
+const getUserByEmail = require('./helpers');
 
 app.use(cookieSession({
   name: 'session',
@@ -78,6 +79,7 @@ const emailLookup = (submittedEmail, submittedPassword) => {
 }
 
 //this replace logIN lookup
+/*
 const getUserByEmail = function(email, usersDtb) {
   // lookup magic...
   let userToReturn = {};
@@ -95,7 +97,7 @@ const getUserByEmail = function(email, usersDtb) {
   }
   return userToReturn;
 };
-
+*/
 const logInLookup = (submittedEmail, submittedPassword) => {
   if (submittedEmail) {
     for (let user in users) {
@@ -225,7 +227,9 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   console.log("Submit register user");
   //console.log(req.body.username);
-   
+  console.log("post register req.body.email", req.body.email) 
+  console.log("post register req.body.password", req.body.password) 
+
   if ((req.body.email === "") || (req.body.password  === "")) {
     res.status(400).send({ error : "Empty field or Email already exist" });
     return;
@@ -233,7 +237,7 @@ app.post("/register", (req, res) => {
 
   const returnedUser = getUserByEmail(req.body.email, users)
   console.log("post register returned user", returnedUser)
-  if (returnedUser) {
+  if (returnedUser.email) {
     res.status(400).send({ error : "Empty field or Email already exist" });
     return
   }
