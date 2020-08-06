@@ -21,9 +21,14 @@ return Math.random().toString(36).substring(2,8);
 }
 
 //urlDatabase
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 //users database
@@ -259,6 +264,12 @@ app.get("/urls", (req, res) => {
     email = "";
   }
   //console.log(tmpObj.id)
+  console.log(urlDatabase);
+  for(let url in urlDatabase) {
+     console.log(url);
+     console.log(urlDatabase[url]);
+     console.log(urlDatabase[url].longURL);
+  }
   let templateVars = {username: username, email: email, urls: urlDatabase };
   
   res.render("urls_index", templateVars);
@@ -266,48 +277,31 @@ app.get("/urls", (req, res) => {
 
 //add another route handler will render the page with the form urls_new.ejs
 app.get("/urls/new", (req, res) => {
-  // let tmpObj;
-  
-  // if (req.cookies["user_id"]) {
-  //   for (let user in users) {
-  //     //console.log("User", user)
-  //     if (user === req.cookies["user_id"]) {
-  //       console.log("yes there is this user")
-  //       tmpObj = users[user]
-  //       console.log(tmpObj)
-  //       username = users[user].id
-  //       email = users[user].email
-  //     } else {
-  //       console.log("User id does not exist")
-  //       username = "";
-  //       email = "";
-  //     }
-  //   }
-  // } else {
-  //   console.log("User id empty")
-  //   username = "";
-  //   email = "";
-  // }
+ 
   let tmpObj = templateLookup(req.cookies["user_id"])
   if (tmpObj) {
     console.log("GET /urls: TRUE there is this user")
     username = tmpObj.id
     email = tmpObj.email
+    let templateVars = {username: username, email: email};
+    res.render("urls_new", templateVars);
   } else {
     console.log("GET /urls: User id does not exist or empty")
     username = "";
     email = "";
+    let templateVars = {username: username, email: email};
+    res.render("urls_login", templateVars);
   }
 
   //console.log(tmpObj.id)
-  let templateVars = {username: username, email: email};
+  /////////let templateVars = {username: username, email: email};
   
   //let templateVars = {user: tmpObj}
   //let templateVars = {username: req.cookies["username"]}
   //ejs template have to be always object
   //"urls_new" is the name of the page to send to the client
   //the page has to be in the views directory always
-  res.render("urls_new", templateVars);
+  //////////res.render("urls_new", templateVars);
 });
 
 //add another route handler will render the page with the form urls_register.ejs
@@ -426,8 +420,11 @@ app.post("/urls/:shortURL/edit", (req, res) => {
 //generate a link that will redirect to the appropriate longURL
 app.get("/u/:shortURL", (req, res) => {
   console.log(" I just press a short URL link")
-  console.log("Req "+ req);
-  const longURL = urlDatabase[req.params.shortURL]
+  //console.log("Req params "+ req.params);
+  //console.log("Req body "+ req.body);
+  console.log("Req body req.params.shortURL "+ req.params.shortURL);
+  console.log("get /u/:shortURL - urlDatabase[req.params.shortURL]", urlDatabase[req.params.shortURL].longURL)
+  const longURL = urlDatabase[req.params.shortURL].longURL
   res.redirect(longURL);
 });
 
@@ -466,6 +463,8 @@ app.get("/urls/:shortURL", (req, res) => {
     email = "";
   }  
   //console.log(tmpObj.id)
+  console.log("get /urls/:shortURL  - longURL: urlDatabase[req.params.shortURL] :",urlDatabase[req.params.shortURL] )
+  console.log("get /urls/:shortURL  - longURL: urlDatabase[req.params.shortURL] :",urlDatabase[req.params.shortURL].longURL )
   let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   //ejs template have to be always object
   //////////let templateVars = {  username: req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
