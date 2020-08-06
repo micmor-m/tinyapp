@@ -28,8 +28,11 @@ return Math.random().toString(36).substring(2,8);
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" },
+  sgq3y6: { longURL: "https://www.repubblica.it", userID: "aJ48lW" }
 };
+
+//sgq3y6: { longURL: "https://www.repubblica.it", userID: "aJ48lW"
 
 //users database
 const users = { 
@@ -42,6 +45,11 @@ const users = {
     id: "user2RandomID", 
     email: "user2@example.com", 
     password: "dishwasher-funk"
+  },
+  "aJ48lW": {
+    id: "aJ48lW", 
+    email: "aJ48lW@example.com", 
+    password: "car"
   }
 }
 
@@ -123,6 +131,18 @@ let tmpObj;
   }
 };
 
+const urlsForUser = (id) => {
+let filteredUrlDatabase = {};
+  for(let url in urlDatabase) {
+    //console.log(url);
+    //console.log(urlDatabase[url]);
+    //console.log(urlDatabase[url].userID);
+    if ((urlDatabase[url].userID) === (id)) {
+      filteredUrlDatabase[url] = urlDatabase[url];
+    }
+  }
+  return filteredUrlDatabase;
+};
 
 //Managing routes with express
 app.get("/", (req, res) => {
@@ -252,6 +272,8 @@ app.get("/urls", (req, res) => {
   //ejs template have to be always object
   console.log("Req cookies user_id:", req.cookies["user_id"])
   
+  
+
   let tmpObj = templateLookup(req.cookies["user_id"])
   console.log("get /urls tmpObj", tmpObj);
   if (tmpObj) {
@@ -264,13 +286,26 @@ app.get("/urls", (req, res) => {
     email = "";
   }
   //console.log(tmpObj.id)
-  console.log(urlDatabase);
-  for(let url in urlDatabase) {
-     console.log(url);
-     console.log(urlDatabase[url]);
-     console.log(urlDatabase[url].longURL);
-  }
-  let templateVars = {username: username, email: email, urls: urlDatabase };
+  // console.log(urlDatabase);
+  // for(let url in urlDatabase) {
+  //    console.log(url);
+  //    console.log(urlDatabase[url]);
+  //    console.log(urlDatabase[url].longURL);
+  //}
+//   let filteredUrlDatabase = {};
+//   for(let url in urlDatabase) {
+//     //console.log(url);
+//     //console.log(urlDatabase[url]);
+//     //console.log(urlDatabase[url].userID);
+//     if ((urlDatabase[url].userID) === (username)) {
+//       filteredUrlDatabase[url] = urlDatabase[url];
+//     }
+//  }
+
+ console.log("get /urls - filteredUrlDatabase", urlsForUser(username))
+ let templateVars = {username: username, email: email, urls: urlsForUser(username) };
+
+  //let templateVars = {username: username, email: email, urls: urlDatabase };
   
   res.render("urls_index", templateVars);
 });
@@ -377,8 +412,12 @@ app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   //res.send("Ok");         // Respond with 'Ok' (we will replace this)
   const newShortURL = generateRandomString();
-  urlDatabase[newShortURL] = req.body.longURL;
-  console.log(urlDatabase);
+  urlDatabase[newShortURL] = {};
+  console.log("post/urls - urlDatabase1", urlDatabase);
+  urlDatabase[newShortURL].longURL = req.body.longURL;
+  console.log("post/urls - urlDatabase2", urlDatabase);
+  urlDatabase[newShortURL].userID = req.cookies["user_id"];
+  console.log("post/urls - urlDatabase3", urlDatabase);
   
   // redirection to specific page for the new created short link
   res.redirect('/urls/' + newShortURL);
@@ -387,7 +426,7 @@ app.post("/urls", (req, res) => {
   //to handle the POST request from the client to edit an existing long URL in the database
 app.post("/urls/:shortURL/submit", (req, res) => {
   console.log("Submit updated longURL");
-  console.log(req.body.longURL);
+  console.log("post /urls/:shortURL/submit - req.body.longURL",req.body.longURL);
   //const newShortURL = generateRandomString();
   urlDatabase[req.params.shortURL] = req.body.longURL;
   //console.log(urlDatabase);
@@ -398,11 +437,17 @@ app.post("/urls/:shortURL/submit", (req, res) => {
 
 //to handle the POST request from the client to remove a shortURL and its long URL from the database
 app.post("/urls/:shortURL/delete", (req, res) => {
-  //console.log(req);  // Log the POST request body to the console
+  //console.log("post /urls/:shortURL/delete - REQ", req);  // Log the POST request body to the console
+  //console.log("/urls/:shortURL/delete - Req cookies user_id:", req.cookies["user_id"])
   //res.send("Ok");    // Respond with 'Ok' (we will replace this)
+  //console.log("/urls/:shortURL/delete - urlDatabase[req.params.shortURL]", urlDatabase[req.params.shortURL].userID)
+  //console.log("/urls/:shortURL/delete - req.params.shortURL ", req.params.shortURL)
+
+  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL].userID) {
   delete urlDatabase[req.params.shortURL];
-  console.log(urlDatabase);
-  
+  //console.log("post /urls/:shortURL/delete - urlDatabase ", urlDatabase);
+  //console.log("post /urls/:shortURL/delete - req.body.longURL ",req.body.longURL);
+  }
   // redirection to the urls_index page ("/urls")
   res.redirect('/urls/');
 });
@@ -413,7 +458,9 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL/edit", (req, res) => {
    console.log("Pressed edit in URL list page")
   // redirection to the urls_index page ("/urls")
+  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL].userID) {
   res.redirect('/urls/' + req.params.shortURL);
+  }
 });
 
 
@@ -424,6 +471,7 @@ app.get("/u/:shortURL", (req, res) => {
   //console.log("Req body "+ req.body);
   console.log("Req body req.params.shortURL "+ req.params.shortURL);
   console.log("get /u/:shortURL - urlDatabase[req.params.shortURL]", urlDatabase[req.params.shortURL].longURL)
+
   const longURL = urlDatabase[req.params.shortURL].longURL
   res.redirect(longURL);
 });
@@ -465,7 +513,14 @@ app.get("/urls/:shortURL", (req, res) => {
   //console.log(tmpObj.id)
   console.log("get /urls/:shortURL  - longURL: urlDatabase[req.params.shortURL] :",urlDatabase[req.params.shortURL] )
   console.log("get /urls/:shortURL  - longURL: urlDatabase[req.params.shortURL] :",urlDatabase[req.params.shortURL].longURL )
-  let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+
+  //21.37 to be finish
+  console.log("get /urls - filteredUrlDatabase", urlsForUser(username)[req.params.shortURL])
+  //let templateVars = {username: username, email: email, urls: urlsForUser(username) };
+  //////////
+
+  let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlsForUser(username)[req.params.shortURL] };
+  //let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   //ejs template have to be always object
   //////////let templateVars = {  username: req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   //"urls_show" is the name of the page to send to the client
