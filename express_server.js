@@ -148,9 +148,11 @@ let tmpObj;
 const urlsForUser = (id) => {
 let filteredUrlDatabase = {};
   for(let url in urlDatabase) {
-    //console.log(url);
-    //console.log(urlDatabase[url]);
-    //console.log(urlDatabase[url].userID);
+    console.log("urls for user url", url);
+    console.log("urls for user urlDatabase[url]", urlDatabase[url]);
+    console.log("urls for user urlDatabase[url].userID", urlDatabase[url].userID);
+    console.log("urls for user urlDatabase[url].userID", urlDatabase[url].userID);
+    console.log("urls for user filteredUrlDatabase ", filteredUrlDatabase )
     if ((urlDatabase[url].userID) === (id)) {
       filteredUrlDatabase[url] = urlDatabase[url];
     }
@@ -173,6 +175,11 @@ app.post("/login", (req, res) => {
   console.log(req.body.email);
   console.log("post login - Submit login", req.body.password);
   
+  if ((req.body.email === "") || (req.body.password  === "")) {
+    res.status(400).send({ error : "Empty field" });
+    return;
+  }
+
   const returnedUser = getUserByEmail(req.body.email, users)
   //if returned user is not an empty object
   if ((returnedUser) && (bcrypt.compareSync(req.body.password, returnedUser.password))) {
@@ -282,6 +289,8 @@ app.get("/urls", (req, res) => {
     console.log("GET /urls: User id does not exist or empty")
     username = "";
     email = "";
+    // let templateVars = { errMessage: "404 Page not found. The short URL typed in is not present in the database."};
+    // res.render("urls_notFound", templateVars);
   }
 
  console.log("get /urls - filteredUrlDatabase", urlsForUser(username))
@@ -447,6 +456,8 @@ app.get("/urls/:shortURL", (req, res) => {
     console.log("GET /urls: User id does not exist or empty")
     username = "";
     email = "";
+    res.status(400).send({ error : "You have to login to see short URL" });
+    return
   }  
   //console.log(tmpObj.id)
   console.log("get /urls/:shortURL  - longURL: urlDatabase[req.params.shortURL] :",urlDatabase[req.params.shortURL] )
@@ -456,6 +467,7 @@ app.get("/urls/:shortURL", (req, res) => {
   console.log("get /urls - filteredUrlDatabase", urlsForUser(username)[req.params.shortURL])
   //let templateVars = {username: username, email: email, urls: urlsForUser(username) };
   //////////
+  let filteredUrls = urlsForUser(username)[req.params.shortURL];
 
   let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlsForUser(username)[req.params.shortURL] };
   //let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
@@ -473,7 +485,7 @@ app.get("/urls/:shortURL", (req, res) => {
     }
   }
   
-  if (match === 0) {
+  if ((match === 0) || (filteredUrls = {}) || (filteredUrls = undefined)) {
     let templateVars = { errMessage: "404 Page not found. The short URL typed in is not present in the database."};
     res.render("urls_notFound", templateVars);
     //res.send("404 Page not found")
