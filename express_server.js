@@ -1,6 +1,12 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+const cookieSession = require('cookie-session');
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ['abcd', '1234']
+}));
 
 //to use cookie
 var cookieParser = require('cookie-parser')
@@ -215,7 +221,9 @@ app.post("/login", (req, res) => {
 
   //delete urlDatabase[req.params.shortURL];
   //console.log(urlDatabase);
-  res.cookie('user_id',username)
+  req.session['user_id'] = username;
+  //res.cookie('user_id',username)
+
   // redirection to the urls_index page ("/urls")
   res.redirect('/urls/');
 });
@@ -227,7 +235,10 @@ app.post("/logout", (req, res) => {
   //delete urlDatabase[req.params.shortURL];
   //console.log(urlDatabase);
   //res.cookie('username',req.body.username)
-  res.clearCookie('user_id')
+
+  req.session['user_id'] = null;
+  //res.clearCookie('user_id')
+
   // redirection to the urls_index page ("/urls")
   res.redirect('/urls/');
 });
@@ -277,18 +288,21 @@ app.post("/register", (req, res) => {
   users[newUser].password = bcrypt.hashSync(req.body.password, 10);
   console.log("Post /register user - hashed PW", bcrypt.hashSync(req.body.password, 10))
   console.log("Post /register users", users);
-  res.cookie('user_id', users[newUser].id)
+  
+  req.session['user_id'] = users[newUser].id;
+  //res.cookie('user_id', users[newUser].id)
   // redirection to the urls_index page ("/urls")
   res.redirect('/urls/');
 });
 
 app.get("/urls", (req, res) => {
   //ejs template have to be always object
-  console.log("Req cookies user_id:", req.cookies["user_id"])
-  
+  //console.log("Req cookies user_id:", req.cookies["user_id"])
+  console.log("Req cookies user_id:", req.session['user_id'])
   
 
-  let tmpObj = templateLookup(req.cookies["user_id"])
+  //let tmpObj = templateLookup(req.cookies["user_id"])
+  let tmpObj = templateLookup(req.session['user_id'])
   console.log("get /urls tmpObj", tmpObj);
   if (tmpObj) {
     console.log("GET /urls: TRUE there is this user")
@@ -327,7 +341,8 @@ app.get("/urls", (req, res) => {
 //add another route handler will render the page with the form urls_new.ejs
 app.get("/urls/new", (req, res) => {
  
-  let tmpObj = templateLookup(req.cookies["user_id"])
+  //let tmpObj = templateLookup(req.cookies["user_id"])
+  let tmpObj = templateLookup(req.session['user_id'])
   if (tmpObj) {
     console.log("GET /urls: TRUE there is this user")
     username = tmpObj.id
@@ -355,7 +370,8 @@ app.get("/urls/new", (req, res) => {
 
 //add another route handler will render the page with the form urls_register.ejs
 app.get("/register", (req, res) => {
-  let tmpObj = templateLookup(req.cookies["user_id"])
+  //let tmpObj = templateLookup(req.cookies["user_id"])
+  let tmpObj = templateLookup(req.session['user_id'])
   if (tmpObj) {
     console.log("GET /urls: TRUE there is this user")
     username = tmpObj.id
@@ -400,7 +416,8 @@ app.get("/login", (req, res) => {
   //   email = "";
   // }
 
-  let tmpObj = templateLookup(req.cookies["user_id"])
+  //let tmpObj = templateLookup(req.cookies["user_id"])
+  let tmpObj = templateLookup(req.session['user_id'])
   if (tmpObj) {
     console.log("GET /urls: TRUE there is this user")
     username = tmpObj.id
@@ -430,7 +447,8 @@ app.post("/urls", (req, res) => {
   console.log("post/urls - urlDatabase1", urlDatabase);
   urlDatabase[newShortURL].longURL = req.body.longURL;
   console.log("post/urls - urlDatabase2", urlDatabase);
-  urlDatabase[newShortURL].userID = req.cookies["user_id"];
+  urlDatabase[newShortURL].userID = req.session['user_id'];
+  //urlDatabase[newShortURL].userID = req.cookies["user_id"];
   console.log("post/urls - urlDatabase3", urlDatabase);
   
   // redirection to specific page for the new created short link
@@ -457,7 +475,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   //console.log("/urls/:shortURL/delete - urlDatabase[req.params.shortURL]", urlDatabase[req.params.shortURL].userID)
   //console.log("/urls/:shortURL/delete - req.params.shortURL ", req.params.shortURL)
 
-  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL].userID) {
+  if (req.session['user_id']  === urlDatabase[req.params.shortURL].userID) {
+  //if (req.cookies["user_id"] === urlDatabase[req.params.shortURL].userID) {
   delete urlDatabase[req.params.shortURL];
   //console.log("post /urls/:shortURL/delete - urlDatabase ", urlDatabase);
   //console.log("post /urls/:shortURL/delete - req.body.longURL ",req.body.longURL);
@@ -472,7 +491,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL/edit", (req, res) => {
    console.log("Pressed edit in URL list page")
   // redirection to the urls_index page ("/urls")
-  if (req.cookies["user_id"] === urlDatabase[req.params.shortURL].userID) {
+  if (  req.session['user_id'] === urlDatabase[req.params.shortURL].userID) {
+  //if (req.cookies["user_id"] === urlDatabase[req.params.shortURL].userID) {
   res.redirect('/urls/' + req.params.shortURL);
   }
 });
@@ -514,7 +534,8 @@ app.get("/urls/:shortURL", (req, res) => {
   //   username = "";
   //   email = "";
   // }
-  let tmpObj = templateLookup(req.cookies["user_id"])
+  let tmpObj = templateLookup(req.session['user_id'])
+  //let tmpObj = templateLookup(req.cookies["user_id"])
   if (tmpObj) {
     console.log("GET /urls: TRUE there is this user")
     username = tmpObj.id
