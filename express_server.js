@@ -34,7 +34,9 @@ const bcrypt = require('bcrypt');
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" },
-  sgq3y6: { longURL: "https://www.repubblica.it", userID: "aJ48lW" }
+  sgq3y6: { longURL: "https://www.repubblica.it", userID: "aJ48lW" },
+  aabbcc: { longURL: "hthttps://www.torontopubliclibrary.ca/", userID: "user2RandomID" },
+  ccdde1: { longURL: "hhttps://www.cbc.ca/", userID: "user2RandomID" }
 };
 
 //sgq3y6: { longURL: "https://www.repubblica.it", userID: "aJ48lW"
@@ -389,16 +391,21 @@ app.post("/urls", (req, res) => {
   });
 
   //to handle the POST request from the client to edit an existing long URL in the database
-app.post("/urls/:shortURL/submit", (req, res) => {
-  console.log("Submit updated longURL");
-  console.log("post /urls/:shortURL/submit - req.body.longURL",req.body.longURL);
-  //const newShortURL = generateRandomString();
-  urlDatabase[req.params.shortURL] = req.body.longURL;
-  //console.log(urlDatabase);
-  
-  // redirection to specific page for the new created short link
-  res.redirect('/urls/');
-});
+  app.post("/urls/:shortURL", (req, res) => {
+    console.log("Submit updated longURL");
+    console.log("post /urls/:shortURL/submit - req.body.longURL",req.body.longURL);
+    //let tmpObj = templateLookup(req.session['user_id'])
+    console.log("post /urls/:shortURL/submit - req.session['user_id']", req.session['user_id'] )
+    //const newShortURL = generateRandomString();
+    console.log("POST /urls/:shortURL -  urlDatabase before update", urlDatabase);
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+    urlDatabase[req.params.shortURL].userID = req.session['user_id'];
+    console.log("POST /urls/:shortURL -  urlDatabase[req.params.shortURL] ",  urlDatabase[req.params.shortURL])
+    console.log("POST /urls/:shortURL -  urlDatabase after update", urlDatabase);
+    
+    // redirection to specific page for the new created short link
+    res.redirect('/urls/');
+  });
 
 //to handle the POST request from the client to remove a shortURL and its long URL from the database
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -421,7 +428,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 
 //to handle the POST request from the client to go to the edit page to editing an existing long URL in the database
-app.post("/urls/:shortURL/edit", (req, res) => {
+//app.post("/urls/:shortURL/edit", (req, res) => {
+app.get("/urls/:shortURL/edit", (req, res) => {
    console.log("Pressed edit in URL list page")
   // redirection to the urls_index page ("/urls")
   if (  req.session['user_id'] === urlDatabase[req.params.shortURL].userID) {
@@ -443,6 +451,22 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+const urlsForUser2 = (id) => {
+  let filteredUrlDatabase = {};
+    for(let url in urlDatabase) {
+      console.log("urls for user url  2  ", url);
+      console.log("urls for user urlDatabase[url]2 ", urlDatabase[url]);
+      console.log("urls for user urlDatabase[url].userID 2 ", urlDatabase[url].userID);
+      console.log("urls for user urlDatabase[url].userID 2 ", urlDatabase[url].userID);
+      console.log("urls for user filteredUrlDatabase 2 ", filteredUrlDatabase )
+      if ((urlDatabase[url].userID) === (id)) {
+        filteredUrlDatabase[url] = urlDatabase[url];
+      }
+    }
+    console.log("ilteredUrlDatabase RETURN", filteredUrlDatabase)
+    return filteredUrlDatabase;
+  };
+
 //add another page to display a single URL and its shortened form
 app.get("/urls/:shortURL", (req, res) => {
 
@@ -456,7 +480,10 @@ app.get("/urls/:shortURL", (req, res) => {
     console.log("GET /urls: User id does not exist or empty")
     username = "";
     email = "";
-    res.status(400).send({ error : "You have to login to see short URL" });
+    //res.status(400).send({ error : "You have to login to see short URL" });
+    res.status(400)
+    let templateVars = { errMessage: "404 Page not found. You have to login to see short URL."};
+    res.render("urls_notFound", templateVars);
     return
   }  
   //console.log(tmpObj.id)
@@ -464,12 +491,17 @@ app.get("/urls/:shortURL", (req, res) => {
   console.log("get /urls/:shortURL  - longURL: urlDatabase[req.params.shortURL] :",urlDatabase[req.params.shortURL].longURL )
 
   //21.37 to be finish
-  console.log("get /urls - filteredUrlDatabase", urlsForUser(username)[req.params.shortURL])
+  console.log("/urls/:shortURL - Url database:", urlDatabase);
+  console.log("get /urls - filteredUrlDatabase", (username)[req.params.shortURL])
   //let templateVars = {username: username, email: email, urls: urlsForUser(username) };
   //////////
-  let filteredUrls = urlsForUser(username)[req.params.shortURL];
+  //let filteredUrls = urlsForUser2(username)[req.params.shortURL];
+  let filteredUrls = urlsForUser(username);
 
-  let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlsForUser(username)[req.params.shortURL] };
+  console.log("req.params.shortURL", req.params.shortURL);
+  //console.log("longURL: urlsForUser(username)[req.params.shortURL]", urlsForUser2(username)[req.params.shortURL].longURL);
+  //let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlsForUser2(username)[req.params.shortURL] };
+  
   //let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   //ejs template have to be always object
   //////////let templateVars = {  username: req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
@@ -477,20 +509,51 @@ app.get("/urls/:shortURL", (req, res) => {
   //the page has to be in the views directory always
   
   //to render the page urls_show only if the shortURL is present in the database
+
+
+
+
+  
+  if ((filteredUrls !== {}) || (filteredUrls !== undefined)) {
+  //  console.log("longURL: urlsForUser(username)[req.params.shortURL]", urlsForUser2(username)[req.params.shortURL].longURL);
+  //let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlsForUser2(username)[req.params.shortURL] };
   let match = 0;
-  for (let short in urlDatabase) {
+  for (let short in filteredUrls) {
+    console.log("FOR SHORT",short)
     if (short === req.params.shortURL) {
+      let templateVars = {username: username, email: email, shortURL: req.params.shortURL, longURL: urlsForUser(username)[req.params.shortURL] };
       res.render("urls_show", templateVars);
       match = 1;
+      
     }
   }
-  
-  if ((match === 0) || (filteredUrls = {}) || (filteredUrls = undefined)) {
-    let templateVars = { errMessage: "404 Page not found. The short URL typed in is not present in the database."};
-    res.render("urls_notFound", templateVars);
-    //res.send("404 Page not found")
-  }
+}    
+//else {
+  let templateVars = { errMessage: "404 Page not found. The short URL typed in is not present in the database."};
+  res.render("urls_notFound", templateVars);
+//}
 });
+
+  // let match = 0;
+  // for (let short in urlDatabase) {
+  //   if (short === req.params.shortURL) {
+  //     res.render("urls_show", templateVars);
+  //     match = 1;
+    
+  //   }
+  // }
+  // if ((match === 0) || (filteredUrls = {}) || (filteredUrls = undefined)) {
+  //   let templateVars = { errMessage: "404 Page not found. The short URL typed in is not present in the database."};
+  // //   res.render("urls_notFound", templateVars);
+  // if ((match === 0)) {
+  //   let templateVars = { errMessage: "404 Page not found. The short URL typed in is not present in the database."};
+  //   res.render("urls_notFound", templateVars);
+  //   //res.send("404 Page not found")
+  // }    else if ((filteredUrls === {}) || (filteredUrls === undefined)) {
+  //   let templateVars = { errMessage: "404 Page not found. The short URL typed in is not present in the database."};
+  //   res.render("urls_notFound", templateVars);
+  // }
+
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
