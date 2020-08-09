@@ -170,6 +170,10 @@ app.get("/urls", (req, res) => {
   } else {
     username = "";
     email = "";
+    res.status(401);
+    let templateVars = {username: username, email: email, errMessage: "401 To access the requested page you need to login first!"};
+    res.render("urls_notFound", templateVars);
+    return;
   }
 
   let templateVars = {username: username, email: email, urls: urlsForUser(username) };
